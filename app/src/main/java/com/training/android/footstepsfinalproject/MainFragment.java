@@ -86,6 +86,7 @@ public class MainFragment extends Fragment implements LoaderManager.LoaderCallba
         {
             currentTempString = savedInstanceState.getString("currentTemp");
             index = savedInstanceState.getInt("index");
+            tempString = savedInstanceState.getString("tempString");
         } else {
             currentTempString = "What is the current temp?";
         }
@@ -295,6 +296,7 @@ public class MainFragment extends Fragment implements LoaderManager.LoaderCallba
     @Override
     public void onSaveInstanceState(Bundle savedInstanceState) {
         savedInstanceState.putString("currentTemp", currentTempString);
+        savedInstanceState.putString("tempString", tempString);
         savedInstanceState.putInt("index", walksListView.getFirstVisiblePosition());
         // Always call the superclass so it can save the view hierarchy state
         super.onSaveInstanceState(savedInstanceState);
