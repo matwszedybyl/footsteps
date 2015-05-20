@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">FootstepsFinalProject</string>
+
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="title">Footstep Distance Tracker</string>
+    <string name="content_authority">com.training.android.footstepsfinalproject</string>
+    <string name="temp_was_not_recorded">Temperature was not recorded</string>
+
+</resources>
