@@ -72,8 +72,8 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
     public void onMapReady(GoogleMap map)
     {
         map.setMyLocationEnabled(true);
-//        startingLoc = new LatLng(getIntent().getDoubleExtra("startingLat", 0), getIntent().getDoubleExtra("startingLong", 0));
-//        endingLoc = new LatLng(getIntent().getDoubleExtra("endingLat", 0), getIntent().getDoubleExtra("endingLong", 0));
+        startingLoc = new LatLng(getIntent().getDoubleExtra("startingLat", 0), getIntent().getDoubleExtra("startingLong", 0));
+        endingLoc = new LatLng(getIntent().getDoubleExtra("endingLat", 0), getIntent().getDoubleExtra("endingLong", 0));
         map.moveCamera(CameraUpdateFactory.newLatLngZoom(startingLoc, 12));
         map.addMarker(new MarkerOptions().position(startingLoc).icon(BitmapDescriptorFactory.defaultMarker()));
         map.addMarker(new MarkerOptions().position(endingLoc).icon(BitmapDescriptorFactory.defaultMarker()));
