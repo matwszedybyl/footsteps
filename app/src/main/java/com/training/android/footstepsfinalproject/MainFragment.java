@@ -58,7 +58,8 @@ public class MainFragment extends Fragment implements LoaderManager.LoaderCallba
     private String currentTempString;
     private double temperature;
     private String tempString;
-    private int index = 0;
+    private int listViewIndex;
+    private Walk currentWalk;
 
     public static final int COL_WALK_ID = 0;
     public static final int COL_STARTING_LAT = 1;
@@ -85,11 +86,15 @@ public class MainFragment extends Fragment implements LoaderManager.LoaderCallba
         if (savedInstanceState != null)
         {
             currentTempString = savedInstanceState.getString("currentTemp");
-            index = savedInstanceState.getInt("index");
+            listViewIndex = savedInstanceState.getInt("listViewIndex");
             tempString = savedInstanceState.getString("tempString");
         } else {
             currentTempString = "What is the current temp?";
+            listViewIndex = -1;
         }
+
+
+
     }
 
     @Override
@@ -108,9 +113,13 @@ public class MainFragment extends Fragment implements LoaderManager.LoaderCallba
         startButton = (Button) rootView.findViewById(R.id.start_tracking_button);
         stopButton = (Button) rootView.findViewById(R.id.stop_tracking_button);
         walksListView = (ListView) rootView.findViewById(R.id.distances_listview);
+        walksListView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
         weatherTextView = (TextView) rootView.findViewById(R.id.weather_textview);
         weatherTextView.setText(currentTempString);
         getWeatherButton = (Button) rootView.findViewById(R.id.find_weather_button);
+        adapter = new WalksAdapter(getActivity(), null, 0);
+        walksListView.setAdapter(adapter);
+
         getWeatherButton.setOnClickListener(new View.OnClickListener()
         {
             @Override
@@ -157,6 +166,7 @@ public class MainFragment extends Fragment implements LoaderManager.LoaderCallba
             }
         });
 
+
         mUri = FootstepsContract.WalkEntry.CONTENT_URI;
         getLoaderManager().restartLoader(0, null, this);
 
@@ -194,35 +204,37 @@ public class MainFragment extends Fragment implements LoaderManager.LoaderCallba
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data)
     {
-        walkList = new ArrayList<>();
-        data.moveToFirst();
-        while(!data.isAfterLast()){
-            Walk walk = new Walk();
-            walk.setId(data.getInt(COL_WALK_ID));
-            walk.getStartingLocation().setLatitude(data.getFloat(COL_STARTING_LAT));
-            walk.getStartingLocation().setLongitude(data.getFloat(COL_STARTING_LONG));
-            walk.getEndingLocation().setLatitude(data.getFloat(COL_ENDING_LAT));
-            walk.getEndingLocation().setLongitude(data.getFloat(COL_ENDING_LONG));
-            walk.setDistanceInMeters(data.getFloat(COL_DISTANCE));
-            walk.setTemperatureFormatted(data.getString(COL_TEMP));
-            walkList.add(walk);
-            data.moveToNext();
-        }
-        adapter = new WalksAdapter(getActivity(), R.layout.walk_list_item, walkList);
+        adapter.swapCursor(data);
+        adapter.setWalkList(data);
         walksListView.setAdapter(adapter);
-        walksListView.setSelectionFromTop(index, 0);
-
+        walksListView.smoothScrollToPosition(listViewIndex);
+        walksListView.setItemChecked(listViewIndex, true);
+        walksListView.setSelection(listViewIndex);
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader)
     {
+        adapter.swapCursor(null);
+    }
 
+    public Walk getCurrentWalk(){
+        if(listViewIndex==-1){
+            return null;
+        }
+        return currentWalk = adapter.getItem(listViewIndex);
+    }
+
+    public void setPosition(int position){
+        listViewIndex = position;
+    }
+
+    public int getPosition(){
+        return listViewIndex;
     }
 
     private class GetWeatherTask extends AsyncTask<Void, Void, Void>
     {
-
         @Override
         protected Void doInBackground(Void... params) {
             ConnectivityManager connMgr = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -297,7 +309,7 @@ public class MainFragment extends Fragment implements LoaderManager.LoaderCallba
     public void onSaveInstanceState(Bundle savedInstanceState) {
         savedInstanceState.putString("currentTemp", currentTempString);
         savedInstanceState.putString("tempString", tempString);
-        savedInstanceState.putInt("index", walksListView.getFirstVisiblePosition());
+        savedInstanceState.putInt("listViewIndex", listViewIndex);
         // Always call the superclass so it can save the view hierarchy state
         super.onSaveInstanceState(savedInstanceState);
     }

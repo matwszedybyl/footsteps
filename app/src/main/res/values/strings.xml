@@ -6,5 +6,7 @@
     <string name="title">Footstep Distance Tracker</string>
     <string name="content_authority">com.training.android.footstepsfinalproject</string>
     <string name="temp_was_not_recorded">Temperature was not recorded</string>
+    <string name="meters">" meters"</string>
+    <string name="degree_far">" °F"</string>
 
 </resources>

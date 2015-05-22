@@ -1,6 +1,7 @@
 package com.training.android.footstepsfinalproject;
 
 import android.content.Intent;
+import android.location.Location;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
@@ -24,12 +25,15 @@ import com.training.android.footstepsfinalproject.models.Walk;
 public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 {
 
+    private static final String DETAILFRAGMENT_TAG = "DFTAG";
     protected FragmentManager fm;
     private boolean mTwoPane;
-    private static final String DETAILFRAGMENT_TAG = "DFTAG";
     private ListView walksListView;
     private MapFragment mapFragment;
     private GoogleMap map;
+    private Walk currentWalk;
+    private Location startingLoc;
+    private Location endingLoc;
 
     @Override
     public void onCreate(Bundle savedInstanceState)
@@ -38,13 +42,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         setContentView(R.layout.activity_main);
         if (findViewById(R.id.map) != null)
         {
-            // The detail container view will be present only in the large-screen layouts
-            // (res/layout-sw600dp). If this view is present, then the activity should be
-            // in two-pane mode.
             mTwoPane = true;
-            // In two-pane mode, show the detail view in this activity by
-            // adding or replacing the detail fragment using a
-            // fragment transaction.
             mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
             mapFragment.getMapAsync(this);
             if (savedInstanceState == null)
@@ -66,19 +64,40 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             fragment = createFragment();
             fm.beginTransaction().add(R.id.fragment_container, fragment).commit();
         }
+
+        currentWalk = new Walk();
+        if (savedInstanceState != null)
+        {
+            startingLoc = new Location("");
+            startingLoc.setLatitude(savedInstanceState.getDouble("startingLat"));
+            startingLoc.setLongitude(savedInstanceState.getDouble("startingLng"));
+
+
+            endingLoc = new Location("");
+            endingLoc.setLatitude(savedInstanceState.getDouble("endingLat"));
+            endingLoc.setLongitude(savedInstanceState.getDouble("endingLng"));
+
+            currentWalk.setStartingLocation(startingLoc);
+            currentWalk.setEndingLocation(endingLoc);
+        }
+
     }
 
     @Override
-    public void onResume(){
+    public void onResume()
+    {
         super.onResume();
         setListItemOnClickListener();
 
     }
 
-    private void setListItemOnClickListener(){
+    private void setListItemOnClickListener()
+    {
         walksListView = (ListView) findViewById(R.id.distances_listview);
 
-        if (mTwoPane) {
+        if (mTwoPane)
+        {
+
             walksListView.setOnItemClickListener(new AdapterView.OnItemClickListener()
             {
                 public void onItemClick(AdapterView<?> parent, View view,
@@ -90,11 +109,17 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                     map.moveCamera(CameraUpdateFactory.newLatLngZoom(newStartingLatLng, 12));
                     map.addMarker(new MarkerOptions().position(newStartingLatLng).icon(BitmapDescriptorFactory.defaultMarker()));
                     map.addMarker(new MarkerOptions().position(newEndingLatLng).icon(BitmapDescriptorFactory.defaultMarker()));
+                    MainFragment mainFrag = (MainFragment) getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+                    mainFrag.setPosition(position);
+
                 }
             });
+            MainFragment mainFrag = (MainFragment) getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+            walksListView.setSelection(mainFrag.getPosition());
 
 
-        } else {
+        } else
+        {
             walksListView.setOnItemClickListener(new AdapterView.OnItemClickListener()
             {
                 public void onItemClick(AdapterView<?> parent, View view,
@@ -140,12 +165,42 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     @Override
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        MainFragment mainFrag = (MainFragment) getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+        currentWalk = mainFrag.getCurrentWalk();
+        if(currentWalk!=null)
+        {
+            savedInstanceState.putDouble("startingLat", currentWalk.getStartingLocation().getLatitude());
+            savedInstanceState.putDouble("startingLng", currentWalk.getStartingLocation().getLongitude());
+            savedInstanceState.putDouble("endingLat", currentWalk.getEndingLocation().getLatitude());
+            savedInstanceState.putDouble("endingLng", currentWalk.getEndingLocation().getLongitude());
+            super.onSaveInstanceState(savedInstanceState);
+        }
+    }
+
+    @Override
     public void onMapReady(GoogleMap map)
     {
         this.map = map;
         map.setMyLocationEnabled(true);
-        LatLng startingLoc = new LatLng(42.3314 , -83.0458 );
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(startingLoc, 10));
+        LatLng startLatLng;
+        if(currentWalk.getStartingLocation().getLatitude()!=0)
+        {
+            startLatLng = new LatLng(currentWalk.getStartingLocation().getLatitude(),
+                    currentWalk.getStartingLocation().getLongitude());
+
+            LatLng endingLatLng = new LatLng(currentWalk.getEndingLocation().getLatitude(),
+                    currentWalk.getEndingLocation().getLongitude());
+
+            map.addMarker(new MarkerOptions().position(startLatLng).icon(BitmapDescriptorFactory.defaultMarker()));
+            map.addMarker(new MarkerOptions().position(endingLatLng).icon(BitmapDescriptorFactory.defaultMarker()));
+            map.moveCamera(CameraUpdateFactory.newLatLngZoom(startLatLng, 12));
+
+        } else
+        {
+            startLatLng = new LatLng(0,0);
+            map.moveCamera(CameraUpdateFactory.newLatLngZoom(startLatLng, 2));
+        }
 
     }
 
